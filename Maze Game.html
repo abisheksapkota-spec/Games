@@ -1,127 +1,874 @@
 <!DOCTYPE html>
-<!-- saved from url=(0066)file:///C:/Users/abish/OneDrive/Desktop/Html%20projecte/index.html -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Simple Maze Game</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Escape — 10 Levels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Structural: walls stay a neutral cool stone in every theme, so they always read
+       clearly against the warm/tinted path colors regardless of chosen theme. */
+    --wall:#1e222b;
+    --wall-edge:#3b4353;
+    --wall-seen-a:#4a5468;
+    --wall-seen-b:#1e222b;
 
-    <style>
-body{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    background:#222;
-    font-family:Arial;
-}
+    --bg:#120e0a;
+    --stone:#1e170f;
+    --stone-light:#2a2015;
+    --path-unseen:#1a130a;
+    --path-seen:#4a3620;
+    --ember:#ffb84d;
+    --ember-soft:rgba(255,184,77,.35);
+    --gold:#e8b04b;
+    --gold-dim:#9c7a3d;
+    --emerald:#3ddc84;
+    --text:#e9dfce;
+    --text-muted:#a89a86;
+    --danger:#c85c4a;
+    --bg-wash:#26190f;
+  }
 
-#maze{
+  /* ---------- Color themes ----------
+     Only path / accent / goal colors shift between themes; walls remain the
+     same neutral slate everywhere so wall-vs-path contrast is never lost. */
+  html[data-theme="amber"]{
+    --bg:#120e0a; --bg-wash:#26190f;
+    --stone:#1e170f; --stone-light:#2a2015;
+    --path-unseen:#1a130a; --path-seen:#4a3620;
+    --ember:#ffb84d; --ember-soft:rgba(255,184,77,.35);
+    --gold:#e8b04b; --gold-dim:#9c7a3d;
+    --emerald:#3ddc84;
+  }
+  html[data-theme="emerald"]{
+    --bg:#081410; --bg-wash:#0f2318;
+    --stone:#0f1c15; --stone-light:#17281e;
+    --path-unseen:#0c1a12; --path-seen:#234a34;
+    --ember:#52e39a; --ember-soft:rgba(82,227,154,.35);
+    --gold:#7fe0ae; --gold-dim:#4a9c74;
+    --emerald:#f2c14e;
+  }
+  html[data-theme="crimson"]{
+    --bg:#150808; --bg-wash:#2a1010;
+    --stone:#1f0f0e; --stone-light:#2c1615;
+    --path-unseen:#1a0c0c; --path-seen:#4a2323;
+    --ember:#ff6b5c; --ember-soft:rgba(255,107,92,.35);
+    --gold:#ff9a86; --gold-dim:#a85446;
+    --emerald:#ffd23d;
+  }
+  html[data-theme="frost"]{
+    --bg:#060d12; --bg-wash:#0f2230;
+    --stone:#0e1922; --stone-light:#16252f;
+    --path-unseen:#0a141a; --path-seen:#234152;
+    --ember:#7fd4ff; --ember-soft:rgba(127,212,255,.35);
+    --gold:#a8e6ff; --gold-dim:#5f95ab;
+    --emerald:#ffb84d;
+  }
+  html[data-theme="violet"]{
+    --bg:#0d0714; --bg-wash:#1e0f2e;
+    --stone:#170e22; --stone-light:#22162f;
+    --path-unseen:#150a1a; --path-seen:#3a2350;
+    --ember:#c98bff; --ember-soft:rgba(201,139,255,.35);
+    --gold:#d9a8ff; --gold-dim:#8c6bab;
+    --emerald:#7cffb0;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    background:
+      radial-gradient(ellipse at 50% -10%, var(--bg-wash) 0%, transparent 55%),
+      var(--bg);
+    transition:background .4s ease;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+  }
+  #app{
+    position:relative;
+    width:100vw;height:100vh;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .screen{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;
+    transition:opacity .45s ease;
+    padding:24px;
+  }
+  .screen.active{opacity:1;pointer-events:auto;}
+
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:.35em;
+    font-size:11px;
+    color:var(--gold-dim);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  h1.title{
+    font-family:'Cinzel',serif;
+    font-weight:900;
+    font-size:clamp(38px,8vw,64px);
+    letter-spacing:.04em;
+    margin:0 0 6px 0;
+    background:linear-gradient(180deg,#ffe3ad 0%,var(--gold) 55%,#a97a2e 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 40px rgba(232,176,75,.25);
+  }
+  .subtitle{
+    color:var(--text-muted);
+    font-size:14px;
+    margin-bottom:36px;
+    text-align:center;
+    max-width:360px;
+    line-height:1.5;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--bg);
+    background:linear-gradient(180deg,#ffcf82,var(--gold) 70%);
+    border:none;
+    padding:14px 34px;
+    border-radius:6px;
+    cursor:pointer;
+    letter-spacing:.02em;
+    box-shadow:0 4px 0 #8a6526, 0 8px 20px rgba(0,0,0,.4);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a6526,0 4px 10px rgba(0,0,0,.4);}
+  .btn.ghost{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--wall-edge);
+    box-shadow:none;
+  }
+  .btn.ghost:active{transform:translateY(2px);}
+
+  /* --- Level select --- */
+  #screen-levels .panel{
+    background:var(--stone);
+    border:1px solid var(--wall-edge);
+    border-radius:14px;
+    padding:28px 24px;
+    width:min(520px,92vw);
+    box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .level-grid{
     display:grid;
-    grid-template-columns: repeat(21,20px);
-    grid-template-rows: repeat(21,20px);
-}
+    grid-template-columns:repeat(5,1fr);
+    gap:12px;
+    margin:20px 0 8px 0;
+  }
+  .level-tile{
+    position:relative;
+    aspect-ratio:1;
+    border-radius:10px;
+    background:linear-gradient(160deg,var(--stone-light),var(--stone));
+    border:1px solid var(--wall-edge);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;
+    transition:transform .1s ease, border-color .15s ease;
+  }
+  .level-tile:hover:not(.locked){transform:translateY(-3px);border-color:var(--gold-dim);}
+  .level-tile .num{
+    font-family:'Cinzel',serif;font-weight:700;
+    font-size:22px;color:var(--text);
+  }
+  .level-tile .stars{display:flex;gap:2px;margin-top:6px;height:10px;}
+  .level-tile .stars svg{width:10px;height:10px;}
+  .level-tile.locked{opacity:.35;cursor:not-allowed;}
+  .level-tile.locked .num{color:var(--text-muted);}
 
-.cell{
-    width:40px;
-    height:40px;
-    box-sizing:border-box;
-}
+  /* --- Game screen --- */
+  #screen-game{justify-content:flex-start;padding-top:18px;}
+  #hud{
+    display:flex;align-items:center;justify-content:space-between;
+    width:min(560px,94vw);
+    margin-bottom:14px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  #hud .hud-item{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  #hud .hud-label{font-size:9px;letter-spacing:.2em;color:var(--gold-dim);text-transform:uppercase;}
+  #hud .hud-value{font-size:20px;font-weight:700;color:var(--text);}
+  #hud .hud-value.timer{color:var(--ember);text-shadow:0 0 12px var(--ember-soft);}
+  #back-btn{
+    background:none;border:none;color:var(--text-muted);
+    font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;gap:4px;
+  }
+  #back-btn:hover{color:var(--gold);}
 
-.wall{
-    background:#333;
-}
+  #maze-wrapper{
+    position:relative;
+    border-radius:10px;
+    box-shadow:0 20px 50px rgba(0,0,0,.55), inset 0 0 0 1px var(--wall-edge);
+    background:var(--path-unseen);
+    overflow:hidden;
+  }
+  #maze{
+    display:grid;
+    position:relative;
+  }
+  .cell{
+    position:relative;
+    transition:background .35s ease, box-shadow .35s ease;
+  }
+  .cell.wall{background:var(--wall);box-shadow:inset 0 0 0 1px rgba(0,0,0,.4), inset 0 0 0 3px rgba(0,0,0,.15);}
+  .cell.wall.seen{background:linear-gradient(160deg,var(--wall-seen-a),var(--wall-seen-b));box-shadow:inset 0 0 0 1px rgba(0,0,0,.3);}
+  .cell.path{background:var(--path-unseen);}
+  .cell.path.seen{background:var(--path-seen);}
+  .cell.path.near{background:#5a4222;box-shadow:inset 0 0 12px rgba(255,184,77,.25);}
+  .cell.goal.seen{
+    background:radial-gradient(circle,rgba(61,220,132,.35),var(--path-seen));
+  }
+  .cell.goal-core{
+    position:absolute;inset:18%;
+    border-radius:3px;
+    background:var(--emerald);
+    box-shadow:0 0 14px 4px rgba(61,220,132,.65);
+    animation:pulse-goal 1.6s ease-in-out infinite;
+  }
 
-.path{
-    background:#eee;
-}
+  @keyframes pulse-goal{
+    0%,100%{transform:scale(.85);opacity:.75;}
+    50%{transform:scale(1.05);opacity:1;}
+  }
 
-.player{
-    background:red;
-}
+  #player{
+    position:absolute;
+    top:0;left:0;
+    border-radius:4px;
+    background:radial-gradient(circle at 35% 30%,#fff2d6,var(--ember) 55%,#c9791f 100%);
+    box-shadow:0 0 16px 5px var(--ember-soft), 0 0 3px 1px #fff2d6;
+    transition:transform .1s linear;
+    animation:flicker 1.8s ease-in-out infinite;
+    z-index:5;
+  }
+  @keyframes flicker{
+    0%,100%{filter:brightness(1);}
+    45%{filter:brightness(1.12);}
+    50%{filter:brightness(.94);}
+    78%{filter:brightness(1.06);}
+  }
 
-.goal{
-    background:limegreen;
-}
-    </style>
-    </head>
+  #touch-controls{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(3,44px);
+    grid-template-rows:repeat(2,44px);
+    gap:6px;
+    justify-content:center;
+  }
+  .tc-btn{
+    background:var(--stone-light);
+    border:1px solid var(--wall-edge);
+    border-radius:8px;
+    color:var(--text);
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .tc-btn:active{background:var(--gold-dim);}
+  #tc-up{grid-column:2;grid-row:1;}
+  #tc-left{grid-column:1;grid-row:2;}
+  #tc-down{grid-column:2;grid-row:2;}
+  #tc-right{grid-column:3;grid-row:2;}
 
+  /* --- Complete modal --- */
+  #modal-complete{
+    position:absolute;inset:0;
+    background:rgba(8,6,4,.75);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;
+    transition:opacity .3s ease;
+    z-index:20;
+  }
+  #modal-complete.active{opacity:1;pointer-events:auto;}
+  .modal-card{
+    background:var(--stone);
+    border:1px solid var(--wall-edge);
+    border-radius:16px;
+    padding:34px 30px;
+    width:min(360px,88vw);
+    text-align:center;
+    transform:translateY(14px) scale(.96);
+    opacity:0;
+    transition:transform .35s cubic-bezier(.2,1.4,.4,1), opacity .35s ease;
+    box-shadow:0 30px 70px rgba(0,0,0,.6);
+  }
+  #modal-complete.active .modal-card{transform:translateY(0) scale(1);opacity:1;}
+  .modal-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;color:var(--gold-dim);text-transform:uppercase;}
+  .modal-title{font-family:'Cinzel',serif;font-weight:700;font-size:26px;color:var(--gold);margin:8px 0 18px 0;}
+  .modal-stars{display:flex;justify-content:center;gap:10px;margin-bottom:18px;}
+  .modal-stars svg{width:38px;height:38px;opacity:0;transform:scale(.3) rotate(-15deg);transition:transform .4s cubic-bezier(.2,1.6,.4,1),opacity .3s ease;}
+  .modal-stars svg.show{opacity:1;transform:scale(1) rotate(0deg);}
+  .modal-time{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--text-muted);margin-bottom:26px;}
+  .modal-time span{color:var(--ember);font-weight:700;}
+  .modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+  .star-svg path{fill:var(--wall-edge);}
+  .star-svg.filled path{fill:var(--gold);filter:drop-shadow(0 0 4px rgba(232,176,75,.6));}
+
+  @media (prefers-reduced-motion: reduce){
+    #player{animation:none;}
+    .cell.goal-core{animation:none;}
+    *{transition-duration:.01ms !important;}
+  }
+
+  .theme-picker{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .theme-picker-label{
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;
+    color:var(--gold-dim);text-transform:uppercase;
+  }
+  .theme-swatches{display:flex;gap:12px;}
+  .theme-swatch{
+    width:30px;height:30px;border-radius:50%;
+    cursor:pointer;position:relative;
+    border:2px solid transparent;
+    box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 3px 8px rgba(0,0,0,.4);
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .theme-swatch:hover{transform:scale(1.12);}
+  .theme-swatch.active{border-color:var(--text);transform:scale(1.15);}
+  .theme-swatch[data-theme="amber"]{background:radial-gradient(circle at 35% 30%,#ffd79a,#e8b04b 60%,#4a3620 100%);}
+  .theme-swatch[data-theme="emerald"]{background:radial-gradient(circle at 35% 30%,#c8ffe4,#52e39a 60%,#234a34 100%);}
+  .theme-swatch[data-theme="crimson"]{background:radial-gradient(circle at 35% 30%,#ffd2c9,#ff6b5c 60%,#4a2323 100%);}
+  .theme-swatch[data-theme="frost"]{background:radial-gradient(circle at 35% 30%,#e3f7ff,#7fd4ff 60%,#234152 100%);}
+  .theme-swatch[data-theme="violet"]{background:radial-gradient(circle at 35% 30%,#efdcff,#c98bff 60%,#3a2350 100%);}
+
+  footer.hint{
+    margin-top:14px;
+    color:var(--text-muted);
+    font-size:12px;
+    text-align:center;
+  }
+</style>
+</head>
 <body>
 
-<div id="maze"><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path player"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path"></div><div class="cell path goal"></div><div class="cell path"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div><div class="cell wall"></div></div>
+<div id="app">
+
+  <!-- TITLE SCREEN -->
+  <div class="screen active" id="screen-title">
+    <div class="eyebrow">Ten Chambers · One Way Out</div>
+    <h1 class="title">MAZE ESCAPE</h1>
+    <p class="subtitle">Find the torch-lit path through ten increasingly twisted chambers. Move quick, move smart — your time earns you stars.</p>
+    <button class="btn" id="btn-play">Enter the Maze</button>
+
+    <div class="theme-picker" id="theme-picker">
+      <div class="theme-picker-label">Torch Color</div>
+      <div class="theme-swatches" id="theme-swatches"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL SELECT -->
+  <div class="screen" id="screen-levels">
+    <div class="panel">
+      <div class="eyebrow" style="text-align:center;">Choose Your Chamber</div>
+      <h1 class="title" style="font-size:28px;text-align:center;">Level Select</h1>
+      <div class="level-grid" id="level-grid"></div>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="btn ghost" id="btn-title-back">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="screen-game">
+    <div id="hud">
+      <button id="back-btn">&larr; Levels</button>
+      <div class="hud-item">
+        <div class="hud-label">Level</div>
+        <div class="hud-value" id="hud-level">1</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Time</div>
+        <div class="hud-value timer" id="hud-timer">0.0s</div>
+      </div>
+    </div>
+    <div id="maze-wrapper">
+      <div id="maze"></div>
+      <div id="player"></div>
+    </div>
+    <div id="touch-controls">
+      <div class="tc-btn" id="tc-up">▲</div>
+      <div class="tc-btn" id="tc-left">◀</div>
+      <div class="tc-btn" id="tc-down">▼</div>
+      <div class="tc-btn" id="tc-right">▶</div>
+    </div>
+    <footer class="hint">Arrow keys or WASD to move</footer>
+  </div>
+
+  <!-- COMPLETE MODAL -->
+  <div id="modal-complete">
+    <div class="modal-card">
+      <div class="modal-eyebrow">Chamber Cleared</div>
+      <div class="modal-title" id="modal-level-title">Level 1</div>
+      <div class="modal-stars" id="modal-stars">
+        <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6z"/></svg>
+        <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6z"/></svg>
+        <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6z"/></svg>
+      </div>
+      <div class="modal-time">Your time: <span id="modal-time-val">0.0s</span></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="modal-levels-btn">Levels</button>
+        <button class="btn ghost" id="modal-retry-btn">Retry</button>
+        <button class="btn" id="modal-next-btn">Next Level</button>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 <script>
+(function(){
+  "use strict";
 
-const maze = [
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-[1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
-[1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1],
-[1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1,0,1],
-[1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
-[1,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
-[1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1],
-[1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
-[1,0,1,1,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1],
-[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
-[1,1,1,0,1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,0,1],
-[1,0,0,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1],
-[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,0,0,1],
-[1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
-[1,0,1,0,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,0,1],
-[1,0,1,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,1,1,1],
-[1,0,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
-[1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
-[1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
-[1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,1],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-];
-const mazeDiv = document.getElementById("maze");
+  /* ---------- Level configuration (progressive difficulty) ---------- */
+  // w,h = number of maze CELLS (grid rendered is 2w+1 by 2h+1). braid = fraction of dead-ends turned into loops (higher = easier).
+  const LEVELS = [
+    {w:5,  h:5,  braid:0.65},
+    {w:6,  h:6,  braid:0.52},
+    {w:7,  h:7,  braid:0.40},
+    {w:8,  h:8,  braid:0.30},
+    {w:10, h:10, braid:0.20},
+    {w:11, h:11, braid:0.13},
+    {w:13, h:13, braid:0.07},
+    {w:14, h:14, braid:0.035},
+    {w:16, h:16, braid:0.012},
+    {w:18, h:18, braid:0.00},
+  ];
 
-let player = {x:1,y:2};
+  // Torch radius shrinks as levels get deeper — less light, harder to navigate.
+  const FOG_NEAR_BY_LEVEL = [3, 3, 2.5, 2.5, 2, 2, 1.6, 1.6, 1.3, 1.2];
+  const FOG_SEEN_BY_LEVEL = [5, 4.6, 4.2, 4, 3.6, 3.4, 3, 2.8, 2.5, 2.3];
 
-function drawMaze(){
-    mazeDiv.innerHTML="";
-    for(let y=0;y<maze.length;y++){
-        for(let x=0;x<maze[y].length;x++){
+  /* ---------- Seeded RNG so a level is stable within a session ---------- */
+  function mulberry32(seed){
+    return function(){
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shuffle(arr, rng){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(rng()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
 
-            const cell=document.createElement("div");
-            cell.classList.add("cell");
+  /* ---------- Maze generation: recursive backtracker + braiding ---------- */
+  function generateMaze(w,h,braidChance,seed){
+    const rng = mulberry32(seed);
+    const width = 2*w+1, height = 2*h+1;
+    const grid = Array.from({length:height},()=>Array(width).fill(1));
+    const visited = Array.from({length:h},()=>Array(w).fill(false));
+    const toGrid = (cx,cy)=>({x:2*cx+1,y:2*cy+1});
 
-            if(maze[y][x]===1) cell.classList.add("wall");
-            else cell.classList.add("path");
+    const stack=[[0,0]];
+    visited[0][0]=true;
+    { const p=toGrid(0,0); grid[p.y][p.x]=0; }
 
-            if(maze[y][x]===2) cell.classList.add("goal");
+    const DIRS=[[0,-1],[0,1],[-1,0],[1,0]];
 
-            if(player.x===x && player.y===y){
-                cell.classList.add("player");
-            }
-
-            mazeDiv.appendChild(cell);
+    while(stack.length){
+      const [cx,cy]=stack[stack.length-1];
+      const dirs=shuffle(DIRS.slice(),rng);
+      let moved=false;
+      for(const [dx,dy] of dirs){
+        const nx=cx+dx, ny=cy+dy;
+        if(nx>=0&&nx<w&&ny>=0&&ny<h&&!visited[ny][nx]){
+          visited[ny][nx]=true;
+          const a=toGrid(cx,cy), b=toGrid(nx,ny);
+          grid[b.y][b.x]=0;
+          grid[(a.y+b.y)/2][(a.x+b.x)/2]=0;
+          stack.push([nx,ny]);
+          moved=true;
+          break;
         }
-    }
-}
-
-document.addEventListener("keydown",(e)=>{
-    let newX=player.x;
-    let newY=player.y;
-
-    if(e.key==="ArrowUp") newY--;
-    if(e.key==="ArrowDown") newY++;
-    if(e.key==="ArrowLeft") newX--;
-    if(e.key==="ArrowRight") newX++;
-
-    if(maze[newY][newX]!==1){
-        player.x=newX;
-        player.y=newY;
+      }
+      if(!moved) stack.pop();
     }
 
-    if(maze[newY][newX]===2){
-        alert("🎉 You escaped the maze!");
+    // Braid: soften some dead-ends into loops for lower levels
+    if(braidChance>0){
+      for(let cy=0;cy<h;cy++){
+        for(let cx=0;cx<w;cx++){
+          const p=toGrid(cx,cy);
+          const neighborDirs=[[0,-1],[0,1],[-1,0],[1,0]];
+          const openCount = neighborDirs.filter(([dx,dy])=>{
+            const wx=p.x+dx, wy=p.y+dy;
+            return grid[wy] && grid[wy][wx]===0;
+          }).length;
+          if(openCount===1 && rng()<braidChance){
+            const closed = neighborDirs.filter(([dx,dy])=>{
+              const wx=p.x+dx, wy=p.y+dy;
+              const cx2=cx+dx, cy2=cy+dy;
+              if(cx2<0||cx2>=w||cy2<0||cy2>=h) return false;
+              return grid[wy] && grid[wy][wx]===1;
+            });
+            if(closed.length){
+              const [dx,dy]=closed[Math.floor(rng()*closed.length)];
+              grid[p.y+dy][p.x+dx]=0;
+            }
+          }
+        }
+      }
     }
 
-    drawMaze();
-});
+    return {grid, width, height};
+  }
 
-drawMaze();
+  /* ---------- BFS shortest path (used for star par-time) ---------- */
+  function shortestPathLen(grid,width,height,sx,sy,gx,gy){
+    const dist = Array.from({length:height},()=>Array(width).fill(-1));
+    dist[sy][sx]=0;
+    const q=[[sx,sy]];
+    let qi=0;
+    while(qi<q.length){
+      const [x,y]=q[qi++];
+      if(x===gx&&y===gy) return dist[y][x];
+      for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
+        const nx=x+dx, ny=y+dy;
+        if(nx>=0&&nx<width&&ny>=0&&ny<height&&grid[ny][nx]===0&&dist[ny][nx]===-1){
+          dist[ny][nx]=dist[y][x]+1;
+          q.push([nx,ny]);
+        }
+      }
+    }
+    return dist[gy][gx];
+  }
 
+  /* ---------- Game state ---------- */
+  const state = {
+    currentLevel: 1,
+    grid: null, width:0, height:0,
+    player:{x:1,y:1},
+    goal:{x:0,y:0},
+    exploredSet: new Set(),
+    startTime: null,
+    hasMoved: false,
+    timerInterval: null,
+    parSteps: 0,
+    cellSize: 24,
+    progress: LEVELS.map(()=>({completed:false,bestStars:0,bestTime:null})),
+  };
+
+  /* ---------- DOM refs ---------- */
+  const screens = {
+    title: document.getElementById('screen-title'),
+    levels: document.getElementById('screen-levels'),
+    game: document.getElementById('screen-game'),
+  };
+  const mazeEl = document.getElementById('maze');
+  const wrapperEl = document.getElementById('maze-wrapper');
+  const playerEl = document.getElementById('player');
+  const hudLevel = document.getElementById('hud-level');
+  const hudTimer = document.getElementById('hud-timer');
+  const levelGrid = document.getElementById('level-grid');
+  const modal = document.getElementById('modal-complete');
+
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  /* ---------- Level select rendering ---------- */
+  function starSVG(filled){
+    return `<svg class="star-svg${filled?' filled':''}" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6z"/></svg>`;
+  }
+  function renderLevelSelect(){
+    levelGrid.innerHTML='';
+    LEVELS.forEach((cfg,i)=>{
+      const levelNum=i+1;
+      const unlocked = levelNum===1 || state.progress[i-1].completed;
+      const p = state.progress[i];
+      const tile=document.createElement('div');
+      tile.className='level-tile'+(unlocked?'':' locked');
+      tile.innerHTML=`<div class="num">${levelNum}</div><div class="stars">${[0,1,2].map(s=>starSVG(s<p.bestStars)).join('')}</div>`;
+      if(unlocked){
+        tile.addEventListener('click',()=>startLevel(levelNum));
+      }
+      levelGrid.appendChild(tile);
+    });
+  }
+
+  /* ---------- Build & render a maze level ---------- */
+  function startLevel(levelNum){
+    state.currentLevel = levelNum;
+    const cfg = LEVELS[levelNum-1];
+    const seed = 1000 + levelNum*97; // stable per level within session
+    const {grid,width,height} = generateMaze(cfg.w,cfg.h,cfg.braid,seed);
+    state.grid=grid; state.width=width; state.height=height;
+    state.player = {x:1,y:1};
+    state.goal = {x:width-2,y:height-2};
+    grid[state.goal.y][state.goal.x]=0;
+    state.exploredSet = new Set();
+    state.hasMoved=false;
+    state.startTime=null;
+    clearInterval(state.timerInterval);
+    hudTimer.textContent='0.0s';
+    hudLevel.textContent=levelNum;
+
+    state.parSteps = shortestPathLen(grid,width,height,1,1,state.goal.x,state.goal.y) || (width+height);
+    state.fogNear = FOG_NEAR_BY_LEVEL[levelNum-1];
+    state.fogSeen = FOG_SEEN_BY_LEVEL[levelNum-1];
+
+    computeCellSize();
+    renderMaze();
+    updatePlayerPosition(false);
+    updateFog();
+    showScreen('game');
+  }
+
+  function computeCellSize(){
+    const maxW = Math.min(window.innerWidth-32, 560);
+    const maxH = Math.min(window.innerHeight-260, 560);
+    const size = Math.floor(Math.min(maxW/state.width, maxH/state.height));
+    state.cellSize = Math.max(8, Math.min(30, size));
+  }
+
+  const cellEls = [];
+  function renderMaze(){
+    mazeEl.innerHTML='';
+    cellEls.length=0;
+    mazeEl.style.gridTemplateColumns = `repeat(${state.width}, ${state.cellSize}px)`;
+    mazeEl.style.gridTemplateRows = `repeat(${state.height}, ${state.cellSize}px)`;
+    wrapperEl.style.width = (state.width*state.cellSize)+'px';
+    wrapperEl.style.height = (state.height*state.cellSize)+'px';
+
+    for(let y=0;y<state.height;y++){
+      const row=[];
+      for(let x=0;x<state.width;x++){
+        const cell=document.createElement('div');
+        const isWall = state.grid[y][x]===1;
+        const isGoal = (x===state.goal.x && y===state.goal.y);
+        cell.className = 'cell '+(isWall?'wall':'path')+(isGoal?' goal':'');
+        if(isGoal){
+          const core=document.createElement('div');
+          core.className='goal-core';
+          cell.appendChild(core);
+        }
+        mazeEl.appendChild(cell);
+        row.push(cell);
+      }
+      cellEls.push(row);
+    }
+
+    playerEl.style.width = state.cellSize+'px';
+    playerEl.style.height = state.cellSize+'px';
+  }
+
+  function updatePlayerPosition(animate){
+    playerEl.style.transition = animate ? 'transform .1s linear' : 'none';
+    playerEl.style.transform = `translate(${state.player.x*state.cellSize}px, ${state.player.y*state.cellSize}px)`;
+  }
+
+  function updateFog(){
+    const {x:px,y:py}=state.player;
+    for(let y=0;y<state.height;y++){
+      for(let x=0;x<state.width;x++){
+        const d = Math.max(Math.abs(x-px),Math.abs(y-py));
+        if(d<=state.fogSeen) state.exploredSet.add(x+','+y);
+      }
+    }
+    for(let y=0;y<state.height;y++){
+      for(let x=0;x<state.width;x++){
+        const el = cellEls[y][x];
+        const key = x+','+y;
+        const seen = state.exploredSet.has(key);
+        const near = Math.max(Math.abs(x-px),Math.abs(y-py)) <= state.fogNear;
+        el.classList.toggle('seen', seen);
+        el.classList.toggle('near', seen && near);
+      }
+    }
+  }
+
+  /* ---------- Movement ---------- */
+  function tryMove(dx,dy){
+    if(modal.classList.contains('active')) return;
+    const nx = state.player.x+dx, ny=state.player.y+dy;
+    if(nx<0||ny<0||nx>=state.width||ny>=state.height) return;
+    if(state.grid[ny][nx]===1) return;
+
+    if(!state.hasMoved){
+      state.hasMoved=true;
+      state.startTime=performance.now();
+      state.timerInterval=setInterval(updateTimerDisplay,100);
+    }
+
+    state.player.x=nx; state.player.y=ny;
+    updatePlayerPosition(true);
+    updateFog();
+
+    if(nx===state.goal.x && ny===state.goal.y){
+      finishLevel();
+    }
+  }
+
+  function updateTimerDisplay(){
+    if(state.startTime==null) return;
+    const t = (performance.now()-state.startTime)/1000;
+    hudTimer.textContent = t.toFixed(1)+'s';
+  }
+
+  function finishLevel(){
+    clearInterval(state.timerInterval);
+    const timeSec = state.startTime!=null ? (performance.now()-state.startTime)/1000 : 0;
+    const par = state.parSteps*0.42;
+    let stars=1;
+    if(timeSec <= par) stars=3;
+    else if(timeSec <= par*1.4) stars=2;
+
+    const idx = state.currentLevel-1;
+    const p = state.progress[idx];
+    p.completed = true;
+    p.bestStars = Math.max(p.bestStars, stars);
+    if(p.bestTime==null || timeSec<p.bestTime) p.bestTime=timeSec;
+
+    openCompleteModal(timeSec, stars);
+  }
+
+  function openCompleteModal(timeSec, stars){
+    document.getElementById('modal-level-title').textContent = 'Level '+state.currentLevel+' Cleared';
+    document.getElementById('modal-time-val').textContent = timeSec.toFixed(1)+'s';
+    const starEls = document.querySelectorAll('#modal-stars .star-svg');
+    starEls.forEach(s=>s.classList.remove('show','filled'));
+
+    const nextBtn = document.getElementById('modal-next-btn');
+    nextBtn.style.display = state.currentLevel<LEVELS.length ? 'inline-block' : 'none';
+
+    modal.classList.add('active');
+
+    starEls.forEach((s,i)=>{
+      setTimeout(()=>{
+        if(i<stars){ s.classList.add('filled'); playChime(i); }
+        s.classList.add('show');
+      }, 250+i*260);
+    });
+  }
+
+  function closeModal(){ modal.classList.remove('active'); }
+
+  /* ---------- Tiny WebAudio chime (no external assets) ---------- */
+  let actx;
+  function playChime(step){
+    try{
+      actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      o.type='sine';
+      const freq = [523.25,659.25,783.99][step]||880;
+      o.frequency.value=freq;
+      g.gain.value=0.0001;
+      o.connect(g); g.connect(actx.destination);
+      const now=actx.currentTime;
+      g.gain.exponentialRampToValueAtTime(0.15, now+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+0.5);
+      o.start(now); o.stop(now+0.5);
+    }catch(e){/* audio not available, ignore */}
+  }
+
+  /* ---------- Input ---------- */
+  window.addEventListener('keydown',(e)=>{
+    if(!screens.game.classList.contains('active')) return;
+    const map={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],
+                w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]};
+    if(map[e.key]){ e.preventDefault(); tryMove(map[e.key][0],map[e.key][1]); }
+  });
+  function bindTouch(id,dx,dy){
+    const el=document.getElementById(id);
+    el.addEventListener('click',()=>tryMove(dx,dy));
+  }
+  bindTouch('tc-up',0,-1);
+  bindTouch('tc-down',0,1);
+  bindTouch('tc-left',-1,0);
+  bindTouch('tc-right',1,0);
+
+  window.addEventListener('resize',()=>{
+    if(screens.game.classList.contains('active')){
+      computeCellSize();
+      renderMaze();
+      // reapply seen/near classes
+      updateFogRedrawOnly();
+      updatePlayerPosition(false);
+    }
+  });
+  function updateFogRedrawOnly(){
+    const {x:px,y:py}=state.player;
+    for(let y=0;y<state.height;y++){
+      for(let x=0;x<state.width;x++){
+        const el=cellEls[y][x];
+        const key=x+','+y;
+        const seen=state.exploredSet.has(key);
+        const near = seen && Math.max(Math.abs(x-px),Math.abs(y-py))<=state.fogNear;
+        el.classList.toggle('seen',seen);
+        el.classList.toggle('near',near);
+      }
+    }
+  }
+
+  /* ---------- Theme picker ---------- */
+  const THEMES = ['amber','emerald','crimson','frost','violet'];
+  state.theme = 'amber';
+
+  function applyTheme(name){
+    state.theme = name;
+    document.documentElement.setAttribute('data-theme', name);
+    document.querySelectorAll('.theme-swatch').forEach(el=>{
+      el.classList.toggle('active', el.dataset.theme===name);
+    });
+  }
+  function renderThemePicker(){
+    const wrap = document.getElementById('theme-swatches');
+    wrap.innerHTML='';
+    THEMES.forEach(name=>{
+      const sw=document.createElement('div');
+      sw.className='theme-swatch'+(name===state.theme?' active':'');
+      sw.dataset.theme=name;
+      sw.title=name.charAt(0).toUpperCase()+name.slice(1);
+      sw.addEventListener('click',()=>applyTheme(name));
+      wrap.appendChild(sw);
+    });
+  }
+  renderThemePicker();
+  applyTheme(state.theme);
+
+  /* ---------- Nav buttons ---------- */
+  document.getElementById('btn-play').addEventListener('click',()=>{
+    renderLevelSelect();
+    showScreen('levels');
+  });
+  document.getElementById('btn-title-back').addEventListener('click',()=>showScreen('title'));
+  document.getElementById('back-btn').addEventListener('click',()=>{
+    clearInterval(state.timerInterval);
+    renderLevelSelect();
+    showScreen('levels');
+  });
+  document.getElementById('modal-levels-btn').addEventListener('click',()=>{
+    closeModal();
+    renderLevelSelect();
+    showScreen('levels');
+  });
+  document.getElementById('modal-retry-btn').addEventListener('click',()=>{
+    closeModal();
+    startLevel(state.currentLevel);
+  });
+  document.getElementById('modal-next-btn').addEventListener('click',()=>{
+    closeModal();
+    startLevel(state.currentLevel+1);
+  });
+
+})();
 </script>
-
-
-</body></html>
+</body>
+</html>
