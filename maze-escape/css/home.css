@@ -1,0 +1,40 @@
+/* ==========================================================================
+   home.css
+   Styles only used on the title screen (#screen-title): the theme picker
+   swatches. Everything else on that screen (title, subtitle, play button)
+   comes from the shared rules in base.css.
+   ========================================================================== */
+
+.theme-picker{
+  margin-top:34px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+
+.theme-picker-label{
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; letter-spacing:.3em;
+  color:var(--gold-dim);
+  text-transform:uppercase;
+}
+
+.theme-swatches{ display:flex; gap:12px; }
+
+.theme-swatch{
+  width:30px; height:30px;
+  border-radius:50%;
+  cursor:pointer;
+  position:relative;
+  border:2px solid transparent;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 3px 8px rgba(0,0,0,.4);
+  transition:transform .15s ease, border-color .15s ease;
+}
+.theme-swatch:hover{ transform:scale(1.12); }
+.theme-swatch.active{ border-color:var(--text); transform:scale(1.15); }
+
+/* Each swatch previews its own theme's colors, independent of the
+   currently-active theme, so people can compare before picking. */
+.theme-swatch[data-theme="amber"]  { background:radial-gradient(circle at 35% 30%, #ffd79a, #e8b04b 60%, #4a3620 100%); }
+.theme-swatch[data-theme="emerald"]{ background:radial-gradient(circle at 35% 30%, #c8ffe4, #52e39a 60%, #234a34 100%); }
+.theme-swatch[data-theme="crimson"]{ background:radial-gradient(circle at 35% 30%, #ffd2c9, #ff6b5c 60%, #4a2323 100%); }
+.theme-swatch[data-theme="frost"]  { background:radial-gradient(circle at 35% 30%, #e3f7ff, #7fd4ff 60%, #234152 100%); }
+.theme-swatch[data-theme="violet"] { background:radial-gradient(circle at 35% 30%, #efdcff, #c98bff 60%, #3a2350 100%); }

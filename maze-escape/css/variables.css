@@ -1,0 +1,83 @@
+/* ==========================================================================
+   variables.css
+   All colors live here as CSS custom properties ("variables"), so every
+   other stylesheet just references e.g. var(--ember) instead of a hex code.
+   To add a new theme: copy one html[data-theme="..."] block and change
+   the values, then add its name to js/config/themes.js.
+   ========================================================================== */
+
+:root{
+  /* Structural — walls stay this same neutral cool stone in EVERY theme,
+     so a wall always reads clearly against the warm/tinted path colors. */
+  --wall:#1e222b;
+  --wall-edge:#3b4353;
+  --wall-seen-a:#4a5468;
+  --wall-seen-b:#1e222b;
+
+  --text:#e9dfce;
+  --text-muted:#a89a86;
+  --danger:#c85c4a;
+
+  /* Default theme values (overridden below per data-theme) */
+  --bg:#120e0a;
+  --bg-wash:#26190f;
+  --stone:#1e170f;
+  --stone-light:#2a2015;
+  --path-unseen:#1a130a;
+  --path-seen:#4a3620;
+  --ember:#ffb84d;
+  --ember-soft:rgba(255,184,77,.35);
+  --gold:#e8b04b;
+  --gold-dim:#9c7a3d;
+  --emerald:#3ddc84;
+}
+
+/* ---------- Theme: Amber Torch (default) ---------- */
+html[data-theme="amber"]{
+  --bg:#120e0a; --bg-wash:#26190f;
+  --stone:#1e170f; --stone-light:#2a2015;
+  --path-unseen:#1a130a; --path-seen:#4a3620;
+  --ember:#ffb84d; --ember-soft:rgba(255,184,77,.35);
+  --gold:#e8b04b; --gold-dim:#9c7a3d;
+  --emerald:#3ddc84;
+}
+
+/* ---------- Theme: Emerald Cave ---------- */
+html[data-theme="emerald"]{
+  --bg:#081410; --bg-wash:#0f2318;
+  --stone:#0f1c15; --stone-light:#17281e;
+  --path-unseen:#0c1a12; --path-seen:#234a34;
+  --ember:#52e39a; --ember-soft:rgba(82,227,154,.35);
+  --gold:#7fe0ae; --gold-dim:#4a9c74;
+  --emerald:#f2c14e;
+}
+
+/* ---------- Theme: Crimson Ember ---------- */
+html[data-theme="crimson"]{
+  --bg:#150808; --bg-wash:#2a1010;
+  --stone:#1f0f0e; --stone-light:#2c1615;
+  --path-unseen:#1a0c0c; --path-seen:#4a2323;
+  --ember:#ff6b5c; --ember-soft:rgba(255,107,92,.35);
+  --gold:#ff9a86; --gold-dim:#a85446;
+  --emerald:#ffd23d;
+}
+
+/* ---------- Theme: Arctic Frost ---------- */
+html[data-theme="frost"]{
+  --bg:#060d12; --bg-wash:#0f2230;
+  --stone:#0e1922; --stone-light:#16252f;
+  --path-unseen:#0a141a; --path-seen:#234152;
+  --ember:#7fd4ff; --ember-soft:rgba(127,212,255,.35);
+  --gold:#a8e6ff; --gold-dim:#5f95ab;
+  --emerald:#ffb84d;
+}
+
+/* ---------- Theme: Violet Rune ---------- */
+html[data-theme="violet"]{
+  --bg:#0d0714; --bg-wash:#1e0f2e;
+  --stone:#170e22; --stone-light:#22162f;
+  --path-unseen:#150a1a; --path-seen:#3a2350;
+  --ember:#c98bff; --ember-soft:rgba(201,139,255,.35);
+  --gold:#d9a8ff; --gold-dim:#8c6bab;
+  --emerald:#7cffb0;
+}

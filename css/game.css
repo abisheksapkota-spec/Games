@@ -1,0 +1,111 @@
+/* ==========================================================================
+   game.css
+   Styles only used on the gameplay screen (#screen-game): the HUD bar, the
+   maze grid itself, the glowing player, the fog-of-war look, and the
+   on-screen touch controls.
+   ========================================================================== */
+
+#screen-game{ justify-content:flex-start; padding-top:18px; }
+
+/* ---------- HUD (level number + timer) ---------- */
+#hud{
+  display:flex; align-items:center; justify-content:space-between;
+  width:min(560px, 94vw);
+  margin-bottom:14px;
+  font-family:'JetBrains Mono', monospace;
+}
+#hud .hud-item{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+#hud .hud-label{ font-size:9px; letter-spacing:.2em; color:var(--gold-dim); text-transform:uppercase; }
+#hud .hud-value{ font-size:20px; font-weight:700; color:var(--text); }
+#hud .hud-value.timer{ color:var(--ember); text-shadow:0 0 12px var(--ember-soft); }
+
+#back-btn{
+  background:none; border:none; color:var(--text-muted);
+  font-family:'Inter', sans-serif; font-size:13px; cursor:pointer;
+  display:flex; align-items:center; gap:4px;
+}
+#back-btn:hover{ color:var(--gold); }
+
+/* ---------- Maze grid ---------- */
+#maze-wrapper{
+  position:relative;
+  border-radius:10px;
+  box-shadow:0 20px 50px rgba(0,0,0,.55), inset 0 0 0 1px var(--wall-edge);
+  background:var(--path-unseen);
+  overflow:hidden;
+}
+#maze{ display:grid; position:relative; }
+
+.cell{
+  position:relative;
+  transition:background .35s ease, box-shadow .35s ease;
+}
+
+/* Walls: same neutral slate in every theme, for guaranteed contrast */
+.cell.wall{ background:var(--wall); box-shadow:inset 0 0 0 1px rgba(0,0,0,.4), inset 0 0 0 3px rgba(0,0,0,.15); }
+.cell.wall.seen{ background:linear-gradient(160deg, var(--wall-seen-a), var(--wall-seen-b)); box-shadow:inset 0 0 0 1px rgba(0,0,0,.3); }
+
+/* Paths: warm, theme-colored */
+.cell.path{ background:var(--path-unseen); }
+.cell.path.seen{ background:var(--path-seen); }
+.cell.path.near{ background:#5a4222; box-shadow:inset 0 0 12px rgba(255,184,77,.25); }
+
+/* Goal tile */
+.cell.goal.seen{ background:radial-gradient(circle, rgba(61,220,132,.35), var(--path-seen)); }
+.cell.goal-core{
+  position:absolute; inset:18%;
+  border-radius:3px;
+  background:var(--emerald);
+  box-shadow:0 0 14px 4px rgba(61,220,132,.65);
+  animation:pulse-goal 1.6s ease-in-out infinite;
+}
+@keyframes pulse-goal{
+  0%,100%{ transform:scale(.85); opacity:.75; }
+  50%{ transform:scale(1.05); opacity:1; }
+}
+
+/* ---------- Player (the torch) ---------- */
+#player{
+  position:absolute; top:0; left:0;
+  border-radius:4px;
+  background:radial-gradient(circle at 35% 30%, #fff2d6, var(--ember) 55%, #c9791f 100%);
+  box-shadow:0 0 16px 5px var(--ember-soft), 0 0 3px 1px #fff2d6;
+  transition:transform .1s linear;
+  animation:flicker 1.8s ease-in-out infinite;
+  z-index:5;
+}
+@keyframes flicker{
+  0%,100%{ filter:brightness(1); }
+  45%{ filter:brightness(1.12); }
+  50%{ filter:brightness(.94); }
+  78%{ filter:brightness(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  #player{ animation:none; }
+  .cell.goal-core{ animation:none; }
+}
+
+/* ---------- Touch controls (mobile) ---------- */
+#touch-controls{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:repeat(3, 44px);
+  grid-template-rows:repeat(2, 44px);
+  gap:6px;
+  justify-content:center;
+}
+.tc-btn{
+  background:var(--stone-light);
+  border:1px solid var(--wall-edge);
+  border-radius:8px;
+  color:var(--text);
+  font-size:16px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.tc-btn:active{ background:var(--gold-dim); }
+#tc-up{ grid-column:2; grid-row:1; }
+#tc-left{ grid-column:1; grid-row:2; }
+#tc-down{ grid-column:2; grid-row:2; }
+#tc-right{ grid-column:3; grid-row:2; }

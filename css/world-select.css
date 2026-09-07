@@ -1,0 +1,75 @@
+/* ==========================================================================
+   world-select.css
+   Styles only used on the world-select screen (#screen-worlds): the panel
+   and the stacked list of world cards (playable ones + locked "coming
+   soon" placeholders for future moods).
+   ========================================================================== */
+
+#screen-worlds .panel{
+  background:var(--stone);
+  border:1px solid var(--wall-edge);
+  border-radius:14px;
+  padding:28px 24px;
+  width:min(480px, 92vw);
+  box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.world-grid{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin:20px 0 8px 0;
+}
+
+.world-card{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 16px;
+  border-radius:12px;
+  background:linear-gradient(160deg, var(--stone-light), var(--stone));
+  border:1px solid var(--wall-edge);
+  cursor:pointer;
+  text-align:left;
+  transition:transform .1s ease, border-color .15s ease;
+}
+.world-card:hover{ transform:translateY(-2px); border-color:var(--gold-dim); }
+
+.world-icon{
+  width:42px; height:42px;
+  border-radius:10px;
+  flex:0 0 auto;
+}
+.world-icon-placeholder{
+  display:flex; align-items:center; justify-content:center;
+  background:var(--wall);
+  color:var(--text-muted);
+  font-size:20px;
+  font-weight:700;
+}
+
+.world-info{ flex:1; min-width:0; }
+.world-name{
+  font-family:'Cinzel', serif; font-weight:700;
+  font-size:17px; color:var(--text);
+}
+.world-mood{
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; letter-spacing:.15em;
+  color:var(--gold-dim); text-transform:uppercase;
+  margin-top:2px;
+}
+.world-desc{
+  font-size:12px; color:var(--text-muted);
+  margin-top:4px;
+}
+
+/* Locked / not-yet-built worlds — visible proof there's room for more moods */
+.world-card.locked-future{
+  opacity:.4;
+  cursor:not-allowed;
+}
+.world-card.locked-future:hover{
+  transform:none;
+  border-color:var(--wall-edge);
+}

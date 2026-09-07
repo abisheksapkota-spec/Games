@@ -1,0 +1,104 @@
+/* ==========================================================================
+   collectibles.css
+   Styles for the optional collectibles system (star shards, locked doors,
+   flash/heart pickups) used by worlds whose config sets
+   features.collectibles = true (currently just Forest — see game.js).
+   On other worlds none of these elements ever get created, so this file
+   simply has nothing to do.
+   ========================================================================== */
+
+/* ---------- Locked doors ---------- */
+.cell.door{
+  position:relative;
+  box-shadow: inset 0 0 0 2px var(--danger);
+}
+.cell.door.unlocked{
+  box-shadow: inset 0 0 0 2px rgba(61,220,132,.5);
+}
+.door-badge{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono', monospace;
+  font-weight:700;
+  font-size:11px;
+  color:var(--danger);
+  text-shadow:0 0 4px rgba(0,0,0,.6);
+}
+.cell.door.unlocked .door-badge{ display:none; }
+
+/* A locked door stays hidden under fog, like a wall — it's a surprise. */
+.cell.door:not(.seen){ box-shadow:none; }
+.cell.door:not(.seen) .door-badge{ opacity:0; }
+
+/* Brief red flash when the player can't afford to open a door. */
+.cell.door.denied{ animation:door-denied .4s ease; }
+@keyframes door-denied{
+  0%,100%{ box-shadow: inset 0 0 0 2px var(--danger); }
+  50%{ box-shadow: inset 0 0 0 2px var(--danger), inset 0 0 14px rgba(200,92,74,.8); }
+}
+
+/* ---------- Collectible icons ---------- */
+.collectible{
+  position:absolute; inset:22%;
+  display:flex; align-items:center; justify-content:center;
+  animation:collectible-bob 1.6s ease-in-out infinite;
+  transition:opacity .25s ease, transform .25s ease;
+}
+.collectible svg{ width:100%; height:100%; }
+@keyframes collectible-bob{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-10%); }
+}
+
+/* Collected pickups fade + pop out */
+.collectible.collected{ opacity:0; transform:scale(1.6); }
+
+/* Hidden under fog until explored, same as doors */
+.cell:not(.seen) .collectible{ opacity:0; }
+
+/* Green heart additionally stays hidden until a star has been collected
+   this level, even once its tile has been explored (see game.js). */
+.collectible-greenHeart.hidden{ opacity:0; pointer-events:none; }
+
+.collectible-star svg path{ fill:none; stroke:#ffd23d; stroke-width:1.4; stroke-linejoin:round; }
+.collectible-heart svg path{ fill:none; stroke:#ff5c5c; stroke-width:1.4; stroke-linejoin:round; }
+.collectible-greenHeart svg path{ fill:none; stroke:#3ddc84; stroke-width:1.4; stroke-linejoin:round; filter:drop-shadow(0 0 4px rgba(61,220,132,.6)); }
+.collectible-flash svg path{ fill:#ffd23d; stroke:none; filter:drop-shadow(0 0 4px rgba(255,210,61,.6)); }
+
+/* ---------- Shard HUD counter ---------- */
+#hud-shards-wrap .hud-value.shards{
+  color:#ffd23d;
+  text-shadow:0 0 10px rgba(255,210,61,.35);
+}
+
+/* Timer glows differently while a heart's slow-time buff is active */
+#hud-timer.slowed{
+  color:#7fd4ff;
+  text-shadow:0 0 12px rgba(127,212,255,.5);
+}
+
+/* ---------- Toast (brief on-screen hint, e.g. "need a star") ---------- */
+#toast{
+  position:fixed;
+  left:50%; bottom:24px;
+  transform:translate(-50%, 8px);
+  background:rgba(10,8,6,.92);
+  border:1px solid var(--wall-edge);
+  color:var(--text);
+  font-size:12px;
+  padding:7px 16px;
+  border-radius:20px;
+  white-space:nowrap;
+  max-width:90vw;
+  text-overflow:ellipsis;
+  overflow:hidden;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+  z-index:30;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+#toast.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}

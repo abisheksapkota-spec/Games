@@ -1,0 +1,48 @@
+/* ==========================================================================
+   mood-forest.css
+   THE FOREST WORLD'S LOOK. Applies whenever <body> has the "world-forest"
+   class (set by js/world-select.js when the player picks this world) and
+   overrides the default Dungeon colors — hedge-green walls, dirt paths,
+   a firefly-glow player, and a golden clearing for the goal. This look is
+   fixed for Forest; the title-screen color-theme picker only affects the
+   Dungeon world.
+
+   This file is the TEMPLATE for future moods — copy it to
+   css/mood-<yourWorldId>.css and change the colors/selectors below.
+   ========================================================================== */
+
+body.world-forest .cell.wall{
+  background:linear-gradient(160deg, #1b3a22, #0f2216);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4), inset 0 0 0 3px rgba(0,0,0,.15);
+  border-radius:3px; /* softer, bushier corners than the Dungeon's stone */
+}
+body.world-forest .cell.wall.seen{
+  background:linear-gradient(160deg, #3f7a4c, #1b3a22);
+}
+
+body.world-forest .cell.path{ background:#1e160c; }
+body.world-forest .cell.path.seen{ background:#4a3820; }
+body.world-forest .cell.path.near{
+  background:#5c4a24;
+  box-shadow:inset 0 0 12px rgba(168,230,110,.25);
+}
+
+body.world-forest .cell.goal.seen{
+  background:radial-gradient(circle, rgba(255,210,61,.35), #4a3820);
+}
+body.world-forest .cell.goal-core{
+  background:#ffd23d;
+  box-shadow:0 0 14px 4px rgba(255,210,61,.65);
+}
+
+body.world-forest #player{
+  background:radial-gradient(circle at 35% 30%, #f2ffd6, #a8e66e 55%, #4f8a2e 100%);
+  box-shadow:0 0 16px 5px rgba(168,230,110,.4), 0 0 3px 1px #f2ffd6;
+}
+
+body.world-forest #maze-wrapper{ background:#150f08; }
+
+body.world-forest #hud .hud-value.timer{
+  color:#a8e66e;
+  text-shadow:0 0 12px rgba(168,230,110,.35);
+}

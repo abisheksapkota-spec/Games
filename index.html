@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Escape — 10 Levels</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     STYLESHEETS
+     variables.css MUST come first — it defines the color variables
+     every other stylesheet uses. Order after that doesn't matter,
+     since each file only styles its own screen.
+     ============================================================ -->
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/world-select.css">
+<link rel="stylesheet" href="css/level-select.css">
+<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/collectibles.css">
+<link rel="stylesheet" href="css/modal.css">
+<!-- Mood overrides — one file per world, loaded last so they can override
+     the default look. Dungeon needs no file (it IS the default look). -->
+<link rel="stylesheet" href="css/mood-forest.css">
+<!-- Add new css/mood-<world>.css links here as future worlds are added. -->
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===================== TITLE SCREEN ===================== -->
+  <div class="screen active" id="screen-title">
+    <div class="eyebrow">Ten Chambers · One Way Out</div>
+    <h1 class="title">MAZE ESCAPE</h1>
+    <p class="subtitle">Find the torch-lit path through ten increasingly twisted chambers. Move quick, move smart — your time earns you stars.</p>
+    <button class="btn" id="btn-play">Enter the Maze</button>
+
+    <div class="theme-picker" id="theme-picker">
+      <div class="theme-picker-label">Torch Color</div>
+      <div class="theme-swatches" id="theme-swatches"></div>
+    </div>
+  </div>
+
+  <!-- ===================== WORLD SELECT ===================== -->
+  <div class="screen" id="screen-worlds">
+    <div class="panel">
+      <div class="eyebrow" style="text-align:center;">Pick A Mood</div>
+      <h1 class="title" style="font-size:28px;text-align:center;">World Select</h1>
+      <div class="world-grid" id="world-grid"></div>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="btn ghost" id="btn-worlds-back">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== LEVEL SELECT ===================== -->
+  <div class="screen" id="screen-levels">
+    <div class="panel">
+      <div class="eyebrow" id="level-select-eyebrow" style="text-align:center;">Choose Your Chamber</div>
+      <h1 class="title" id="level-select-title" style="font-size:28px;text-align:center;">Level Select</h1>
+      <div class="level-grid" id="level-grid"></div>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="btn ghost" id="btn-levels-back">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== GAME SCREEN ===================== -->
+  <div class="screen" id="screen-game">
+    <div id="hud">
+      <button id="back-btn">&larr; Levels</button>
+      <div class="hud-item">
+        <div class="hud-label">Level</div>
+        <div class="hud-value" id="hud-level">1</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Time</div>
+        <div class="hud-value timer" id="hud-timer">0.0s</div>
+      </div>
+      <!-- Only shown for worlds with features.collectibles = true (see game.js) -->
+      <div class="hud-item" id="hud-shards-wrap" style="display:none;">
+        <div class="hud-label">Shards</div>
+        <div class="hud-value shards" id="hud-shards">0</div>
+      </div>
+    </div>
+    <div id="maze-wrapper">
+      <div id="maze"></div>
+      <div id="player"></div>
+    </div>
+    <div id="toast"></div>
+    <div id="touch-controls">
+      <div class="tc-btn" id="tc-up">▲</div>
+      <div class="tc-btn" id="tc-left">◀</div>
+      <div class="tc-btn" id="tc-down">▼</div>
+      <div class="tc-btn" id="tc-right">▶</div>
+    </div>
+    <footer class="hint">Arrow keys or WASD to move</footer>
+  </div>
+
+  <!-- ===================== LEVEL COMPLETE MODAL ===================== -->
+  <div id="modal-complete">
+    <div class="modal-card">
+      <div class="modal-eyebrow">Chamber Cleared</div>
+      <div class="modal-title" id="modal-level-title">Level 1</div>
+      <div class="modal-stars" id="modal-stars">
+        <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6z"/></svg>
+        <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6z"/></svg>
+        <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.2l7.1-.6z"/></svg>
+      </div>
+      <div class="modal-time">Your time: <span id="modal-time-val">0.0s</span></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="modal-levels-btn">Levels</button>
+        <button class="btn ghost" id="modal-retry-btn">Retry</button>
+        <button class="btn" id="modal-next-btn">Next Level</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     SCRIPTS — order matters! Each file attaches itself to the
+     shared `window.MazeApp` object, and later files use pieces
+     that earlier files defined. The dependency chain is:
+
+       maze-generator.js  (no dependencies — pure math)
+       collectibles.js    (needs MazeGenerator.shuffle — placement math for
+                            star shards / doors / boosters, Forest-style worlds only)
+       audio.js           (no dependencies)
+       config/themes.js   (no dependencies)
+       config/levels/*.js (no dependencies — fills MazeApp.levelConfigs, the Dungeon world)
+       config/worlds/forest/*.js (no dependencies — fills MazeApp.worldConfigs.forest)
+       [add future worlds' level files here, same pattern as the forest ones]
+              |
+       config/worlds.js   (needs the level-config arrays above to exist,
+                            combines them into MazeApp.worlds)
+              |
+       state.js           (needs MazeApp.worlds for its progress helper)
+              |
+       home.js            (needs state, themes)
+       world-select.js    (needs state, worlds)
+       level-select.js    (needs state, getActiveWorld/getActiveConfigs)
+       game.js             (needs state, getActiveConfigs, MazeGenerator, Collectibles)
+       modal.js            (needs state, getActiveConfigs, Audio)
+              |
+       main.js             (needs everything above — wires it all together and boots the app)
+     ============================================================ -->
+
+<script src="js/maze-generator.js"></script>
+<script src="js/collectibles.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/config/themes.js"></script>
+
+<!-- Dungeon world (World 1, the classic 10 chambers) -->
+<script src="js/config/levels/level1.js"></script>
+<script src="js/config/levels/level2.js"></script>
+<script src="js/config/levels/level3.js"></script>
+<script src="js/config/levels/level4.js"></script>
+<script src="js/config/levels/level5.js"></script>
+<script src="js/config/levels/level6.js"></script>
+<script src="js/config/levels/level7.js"></script>
+<script src="js/config/levels/level8.js"></script>
+<script src="js/config/levels/level9.js"></script>
+<script src="js/config/levels/level10.js"></script>
+
+<!-- Forest world (World 2, 5 levels) -->
+<script src="js/config/worlds/forest/level1.js"></script>
+<script src="js/config/worlds/forest/level2.js"></script>
+<script src="js/config/worlds/forest/level3.js"></script>
+<script src="js/config/worlds/forest/level4.js"></script>
+<script src="js/config/worlds/forest/level5.js"></script>
+
+<!-- Add future worlds' level<N>.js script tags here, same pattern as Forest above -->
+
+<script src="js/config/worlds.js"></script>
+
+<script src="js/state.js"></script>
+<script src="js/home.js"></script>
+<script src="js/world-select.js"></script>
+<script src="js/level-select.js"></script>
+<script src="js/game.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

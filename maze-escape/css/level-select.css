@@ -1,0 +1,44 @@
+/* ==========================================================================
+   level-select.css
+   Styles only used on the level-select screen (#screen-levels): the stone
+   panel and the grid of 10 level tiles.
+   ========================================================================== */
+
+#screen-levels .panel{
+  background:var(--stone);
+  border:1px solid var(--wall-edge);
+  border-radius:14px;
+  padding:28px 24px;
+  width:min(520px, 92vw);
+  box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.level-grid{
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:12px;
+  margin:20px 0 8px 0;
+}
+
+.level-tile{
+  position:relative;
+  aspect-ratio:1;
+  border-radius:10px;
+  background:linear-gradient(160deg, var(--stone-light), var(--stone));
+  border:1px solid var(--wall-edge);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer;
+  transition:transform .1s ease, border-color .15s ease;
+}
+.level-tile:hover:not(.locked){ transform:translateY(-3px); border-color:var(--gold-dim); }
+
+.level-tile .num{
+  font-family:'Cinzel', serif; font-weight:700;
+  font-size:22px; color:var(--text);
+}
+
+.level-tile .stars{ display:flex; gap:2px; margin-top:6px; height:10px; }
+.level-tile .stars svg{ width:10px; height:10px; }
+
+.level-tile.locked{ opacity:.35; cursor:not-allowed; }
+.level-tile.locked .num{ color:var(--text-muted); }

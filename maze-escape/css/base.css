@@ -1,0 +1,107 @@
+/* ==========================================================================
+   base.css
+   Page reset, fonts, and the generic "screen" system. A "screen" is one of
+   the four full-page views (title / level-select / game / modal handled
+   separately). Only one screen has the .active class at a time — see
+   js/main.js for the code that toggles it.
+   ========================================================================== */
+
+*{ box-sizing:border-box; }
+
+html,body{
+  margin:0; padding:0; height:100%;
+  background:
+    radial-gradient(ellipse at 50% -10%, var(--bg-wash) 0%, transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Inter', sans-serif;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  transition:background .4s ease;
+}
+
+#app{
+  position:relative;
+  width:100vw; height:100vh;
+  display:flex; align-items:center; justify-content:center;
+}
+
+.screen{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity .45s ease;
+  padding:24px;
+}
+.screen.active{ opacity:1; pointer-events:auto; }
+
+/* ---------- Shared typography ---------- */
+.eyebrow{
+  font-family:'JetBrains Mono', monospace;
+  letter-spacing:.35em;
+  font-size:11px;
+  color:var(--gold-dim);
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+
+h1.title{
+  font-family:'Cinzel', serif;
+  font-weight:900;
+  font-size:clamp(38px,8vw,64px);
+  letter-spacing:.04em;
+  margin:0 0 6px 0;
+  background:linear-gradient(180deg,#ffe3ad 0%, var(--gold) 55%, #a97a2e 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:0 0 40px rgba(232,176,75,.25);
+}
+
+.subtitle{
+  color:var(--text-muted);
+  font-size:14px;
+  margin-bottom:36px;
+  text-align:center;
+  max-width:360px;
+  line-height:1.5;
+}
+
+footer.hint{
+  margin-top:14px;
+  color:var(--text-muted);
+  font-size:12px;
+  text-align:center;
+}
+
+/* ---------- Shared buttons ---------- */
+.btn{
+  font-family:'Inter', sans-serif;
+  font-weight:600;
+  font-size:15px;
+  color:var(--bg);
+  background:linear-gradient(180deg,#ffcf82,var(--gold) 70%);
+  border:none;
+  padding:14px 34px;
+  border-radius:6px;
+  cursor:pointer;
+  letter-spacing:.02em;
+  box-shadow:0 4px 0 #8a6526, 0 8px 20px rgba(0,0,0,.4);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:active{ transform:translateY(3px); box-shadow:0 1px 0 #8a6526, 0 4px 10px rgba(0,0,0,.4); }
+
+.btn.ghost{
+  background:transparent;
+  color:var(--text);
+  border:1px solid var(--wall-edge);
+  box-shadow:none;
+}
+.btn.ghost:active{ transform:translateY(2px); }
+
+/* ---------- Shared star icon ---------- */
+.star-svg path{ fill:var(--wall-edge); }
+.star-svg.filled path{ fill:var(--gold); filter:drop-shadow(0 0 4px rgba(232,176,75,.6)); }
+
+@media (prefers-reduced-motion: reduce){
+  *{ transition-duration:.01ms !important; }
+}
