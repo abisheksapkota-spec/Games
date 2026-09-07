@@ -1,10 +1,14 @@
-MAZE ESCAPE — folder guide
+MAZE ESCAPE: folder guide
 ===========================
 
 HOW TO RUN
 -----------
 Just double-click index.html to open it in your browser. Everything is
 plain HTML/CSS/JS with no build step or server required.
+
+
+use this link
+👉 https://abisheksapkota-spec.github.io/Games/
 
 
 FOLDER STRUCTURE
